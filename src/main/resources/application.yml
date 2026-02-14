@@ -5,13 +5,29 @@ spring:
   cloud:
     gateway:
       routes:
+        - id: auth-service-route
+          uri: http://auth-service:4005
+          predicates:
+            - Path=/auth/**
+          filters:
+            - StripPrefix=1
+# after this close the port from the auth-service to the outside world, only allow access from the api-gateway
+#we do not apply the token validation logic to any of the auth service routes , this means they
+#  will never be able to login as they do not have a token in the first place , but it will be in
+#  the patien service
+
+
         - id: patient-service-route
           uri: http://patient-service:4000
           predicates:
             - Path=/api/patients/**
           filters:
             - StripPrefix=1
-
+            - JwtValidation
+#now the validation filter we added it is going to effect any routes to the patient service
+#spring will going to use the name JwtValidation to look for class that prefix with gateway
+#  filter factory , thats why we named the class JwtValidationGatewayFilterFactory
+#        DELETE the test folder to stop our build from failing , we will add some tests later on
         - id: api-docs-patient-route
           uri: http://patient-service:4000
           predicates:
